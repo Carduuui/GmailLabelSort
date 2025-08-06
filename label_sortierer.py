@@ -21,7 +21,7 @@ def main():
 
     service = build('gmail' , 'v1', credentials=creds)
 
-    query = 'from:recruiting@enbw.com'
+    query = 'subject:(Bewerbung OR Duales Studium OR Bewerbungsunterlagen OR Online Test OR Onlinetest)'
     result = service.users().messages().list(userId='me', q=query).execute()
     messages = result.get('messages', [])
 
