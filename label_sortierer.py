@@ -5,7 +5,6 @@ from googleapiclient.discovery import build
 
 SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
 
-print("funktioniert")
 
 def main():
     creds = None
@@ -21,13 +20,45 @@ def main():
 
     service = build('gmail' , 'v1', credentials=creds)
 
-    query = 'subject:(Bewerbung OR Duales Studium OR Bewerbungsunterlagen OR Online Test OR Onlinetest)'
-    result = service.users().messages().list(userId='me', q=query).execute()
-    messages = result.get('messages', [])
+    search_terms = [
+        'Bewerbung',
+        '"Duales Studium"',
+        'Onlinetest',
+        'Online-Test',
+        '"Online Test"',
+        'Interview'
+    ]
 
-    if not messages:
-        print("Keine passenden Nachrichten gefunden.")
-        return
+    all_message_ids = set()
+
+    timeFilter = ""
+
+    print("1: Letzte 7 Tage aktualisieren")
+    print("2: 100 Emails aktualisieren")
+
+    inputEingabe = input('Zahl eingeben:')
+
+    if inputEingabe == "1":
+        timeFilter = " newer_than:7d"
+    else:
+        print("normale 100 emails")
+
+    for term in search_terms:
+        try:
+            query = term + timeFilter
+            result = service.users().messages().list(userId='me', q=query).execute()
+            messages = result.get('messages', [])
+            for msg in messages:
+                all_message_ids.add(msg['id'])
+            print(f"Suchbegriff '{term}': {len(messages)} E-Mails gefunden")
+        except Exception as e:
+            print(f"Fehler bei Suchbegriff '{term}': {e}")
+
+        print(f"\nInsgesamt {len(all_message_ids)} eindeutige E-Mails gefunden")
+
+        if not all_message_ids:
+            print("Keine passenden Nachrichten gefunden.")
+            return
 
     label_name = "Bewerbung"
     label_id = None
@@ -40,18 +71,28 @@ def main():
             
 
     if not label_id:
-        print(f'Label "{label_name}" nicht gefunden. Bitte in Gmail manuell anlegen')
-        return
+        label_object = {
+            'name': label_name,
+            'labelListVisibility': 'labelShow',
+            'messageListVisibility': 'show'
+        }
+        created_label = service.users().labels().create(userId='me', body=label_object).execute()
+        label_id = created_label['id']
+        print(f"Label '{label_name}' wurde automatisch erstellt")
 
-    for msg in messages:
-        msg_id = msg['id']
-        service.users().messages().modify(
-            userId = 'me',
-            id=msg_id,
-            body={'addLabelIds': [label_id]}
-        ).execute()
+    labeled_count = 0
+    for msg_id in all_message_ids:
+        try:
+            service.users().messages().modify(
+                userId='me',
+                id=msg_id,
+                body={'addLabelIds': [label_id]}
+            ).execute()
+            labeled_count += 1
+        except Exception as e:
+            print(f"Fehler beim Labeln der Nachricht {msg_id}: {e}")
 
-    print(f"{len(messages)} E-Mails wurden mit dem Label '{label_name}' versehen")
+    print(f"{labeled_count} E-Mails wurden mit dem Label '{label_name}' versehen")
 
 if __name__ == '__main__':
     main()    
