@@ -82,6 +82,9 @@ def main():
         ],
         'Booking':[
             '"Booking.com"'
+        ],
+        'Online Bestellung':[
+            '"Lieferando"'
         ]
     }
 
