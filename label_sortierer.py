@@ -96,6 +96,7 @@ def main():
     if inputEingabe == "1":
         time_filter = " newer_than:7d"
     else:
+        time_filter = "older_than:3650d"
         print("normale 100 emails")
 
     total_labeled = 0
