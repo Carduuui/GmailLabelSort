@@ -78,7 +78,8 @@ def main():
             'Online-Test',
             '"Online Test"',
             'Interview',
-            '"Assessment Center'
+            '"Assessment Center"',
+            '"Online-Vorstellungsgespräch"'
         ],
         'Booking':[
             '"Booking.com"'
